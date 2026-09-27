@@ -24,7 +24,7 @@ jobs:
             $null = [System.Management.Automation.Language.Parser]::ParseFile(
               (Resolve-Path $file), [ref]$null, [ref]$errs)
             if ($errs -and $errs.Count) { throw "$file has parse errors" }
-            Write-Host "$file: parse-ok"
+            Write-Host "$($file): parse-ok"
           }
 
       - name: Verify release zip matches source directory
