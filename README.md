@@ -1,5 +1,3 @@
-# Five-Hour-Limit-Get-Lost-
-让codex持续24小时为你运行，tibo重置前一夜必备
 <div align="center">
 
   <img src="five_hour_limit_icon.png" alt="Five-Hour Limit, Get Lost! logo" width="140" />
@@ -89,7 +87,7 @@ The scheduler only runs while its window is open (it can be minimized). Finished
 Download or clone this repository. In the project folder, run:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\install.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\Five-Hour-Limit-Get-Lost-v0.1.0\\install.ps1
 ```
 
 The installer creates a **Five-Hour Limit, Get Lost!** shortcut on the current user's Desktop. It does not require administrator privileges.
@@ -97,7 +95,7 @@ The installer creates a **Five-Hour Limit, Get Lost!** shortcut on the current u
 Prefer no shortcut? Double-click:
 
 ```text
-start-five-hour-limit-get-lost.bat
+Five-Hour-Limit-Get-Lost-v0.1.0\\start-five-hour-limit-get-lost.bat
 ```
 
 ### 2. Add a task to the monitor
@@ -124,7 +122,8 @@ The default safety buffer is two minutes. The clock and schedule use the Windows
 - **刷新任务** — read recent sessions from the current Windows profile.
 - **开始监控** — add or update the selected existing session in the local monitor list.
 - **一键全删** — remove all monitor records; it does not delete Codex tasks or project files.
-- **右键 → 删除此监控任务** — remove one monitor record.
+- **续跑指令** — edit the instruction sent to Codex when a task resumes; each task keeps its own prompt.
+- **右键 → 编辑续跑指令** — change the resume instruction for an existing monitored task.
 - **暂停** — stop starting new work while keeping the queue visible.
 
 ## Privacy first by design
@@ -148,14 +147,8 @@ Do not commit the local state directory or unredacted run logs to a public repos
 ## Repository layout
 
 ```text
-CodexQueueCN.ps1                 Main Windows scheduler
-install.ps1                      Creates the desktop shortcut
-uninstall.ps1                    Removes only that shortcut
-start-five-hour-limit-get-lost.* Hidden/portable launchers
-five_hour_limit_icon.*           Application icon assets
-README.md                        Project overview (this file)
-README-CN.md                     Short Chinese guide
-.github/workflows/validate.yml   Windows script validation
+Five-Hour-Limit-Get-Lost-v0.1.0/     Release source directory (main scheduler and launchers)
+Five-Hour-Limit-Get-Lost-v0.1.0.zip  Packaged release archive for direct download
 ```
 
 ## Troubleshooting
