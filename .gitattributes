@@ -1,8 +1,4 @@
-* text=auto
-*.ps1 text eol=lf
-*.bat text eol=lf
-*.vbs text eol=lf
-*.md text
+* text=auto eol=lf
 *.png binary
 *.ico binary
 *.zip binary -diff
