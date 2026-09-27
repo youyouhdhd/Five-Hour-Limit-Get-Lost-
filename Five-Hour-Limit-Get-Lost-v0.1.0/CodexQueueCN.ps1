@@ -44,7 +44,7 @@ function Refresh-Grid{
             elseif($i.status -eq 'waiting' -or $i.status -eq 'monitoring'){$waiting++}
             $name=if($i.title){[string]$i.title}else{[string]$i.prompt}
             $values=[object[]]@([string]$i.id,[string](Status-CN $i.status $i.mode),$name,[string]$i.cwd,[string]$i.session,(Display-Time $i.detectedResetAt),(Display-Time $i.waitUntil))
-            [void]$script:Grid.Rows.Add($values);$row=$script:Grid.Rows[$script:Grid.Rows.Count-1];$tip=[string]$i.prompt;if($i.detectedResetAt -and $i.waitUntil){$row.Cells[7].ToolTipText='重置 '+([datetime]$i.detectedResetAt).ToString('MM-dd HH:mm')+' + 缓冲 '+(Get-BufferMinutes $i)+' 分钟 = '+([datetime]$i.waitUntil).ToString('MM-dd HH:mm')+' 启动'};if(Test-WhiteSpace $tip){$tip=$script:DefaultPrompt};$row.Cells[2].ToolTipText='续跑指令：'+$tip
+            [void]$script:Grid.Rows.Add($values);$row=$script:Grid.Rows[$script:Grid.Rows.Count-1];$tip=[string]$i.prompt;if($i.detectedResetAt -and $i.waitUntil){$row.Cells[6].ToolTipText='重置 '+([datetime]$i.detectedResetAt).ToString('MM-dd HH:mm')+' + 缓冲 '+(Get-BufferMinutes $i)+' 分钟 = '+([datetime]$i.waitUntil).ToString('MM-dd HH:mm')+' 启动'};if(Test-WhiteSpace $tip){$tip=$script:DefaultPrompt};$row.Cells[2].ToolTipText='续跑指令：'+$tip
         }
         if($script:ManualTime){$nextManual=$null;foreach($i in @($script:Items)){if([string]$i.mode -eq 'manual' -and $i.manualResetAt){try{$candidate=[datetime]$i.manualResetAt;if((-not $nextManual) -or $candidate -lt $nextManual){$nextManual=$candidate}}catch{}}};if($nextManual){$script:ManualTime.Value=$nextManual}}
         if($script:MonitorInfo){$script:MonitorInfo.Text="当前监控：$count 个任务（列表中可右键删除）"}
