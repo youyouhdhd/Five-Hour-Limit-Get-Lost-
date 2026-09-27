@@ -1,0 +1,18 @@
+# Local scheduler state and temporary files
+queue.json
+*.tmp
+*.zip
+run_*.txt
+ui_*.png
+
+# Workspace-only folders
+outputs/
+work/
+
+# Windows and editor noise
+Thumbs.db
+Desktop.ini
+.vs/
+.vscode/
+*.user
+*.suo

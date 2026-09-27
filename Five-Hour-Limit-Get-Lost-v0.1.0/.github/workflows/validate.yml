@@ -1,0 +1,34 @@
+name: Validate Windows scripts
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  powershell:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @('CodexQueueCN.ps1', 'install.ps1', 'uninstall.ps1')
+          foreach ($file in $files) {
+            [scriptblock]::Create((Get-Content -Raw -LiteralPath $file)) | Out-Null
+            Write-Host "${file}: parse-ok"
+          }
+
+      - name: Check release assets
+        shell: pwsh
+        run: |
+          $required = @(
+            'CodexQueueCN.ps1',
+            'start-five-hour-limit-get-lost.bat',
+            'start-five-hour-limit-get-lost.vbs',
+            'five_hour_limit_icon.ico'
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Missing release asset: $file" }
+          }
