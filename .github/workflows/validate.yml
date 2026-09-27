@@ -1,0 +1,55 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @(
+            'Five-Hour-Limit-Get-Lost-v0.1.0/CodexQueueCN.ps1',
+            'Five-Hour-Limit-Get-Lost-v0.1.0/install.ps1',
+            'Five-Hour-Limit-Get-Lost-v0.1.0/uninstall.ps1'
+          )
+          foreach ($file in $files) {
+            $errs = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file), [ref]$null, [ref]$errs)
+            if ($errs -and $errs.Count) { throw "$file has parse errors" }
+            Write-Host "$file: parse-ok"
+          }
+
+      - name: Verify release zip matches source directory
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $dir = 'Five-Hour-Limit-Get-Lost-v0.1.0'
+          $zip = 'Five-Hour-Limit-Get-Lost-v0.1.0.zip'
+          $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip))
+          try {
+            $mismatches = @()
+            foreach ($entry in $archive.Entries) {
+              if ([string]::IsNullOrEmpty($entry.Name)) { continue }
+              $disk = Join-Path $dir $entry.FullName
+              if (-not (Test-Path -LiteralPath $disk)) {
+                $mismatches += "only in zip: $($entry.FullName)"
+                continue
+              }
+              $h1 = [System.Security.Cryptography.SHA256]::Create()
+              $s = $entry.Open()
+              try { $zh = [BitConverter]::ToString($h1.ComputeHash($s)).Replace('-','') }
+              finally { $s.Dispose() }
+              $dh = (Get-FileHash -LiteralPath $disk -Algorithm SHA256).Hash
+              if ($zh -ne $dh) { $mismatches += "differs: $($entry.FullName)" }
+            }
+            if ($mismatches.Count) { throw ($mismatches -join [Environment]::NewLine) }
+            Write-Host "release zip matches source directory"
+          } finally { $archive.Dispose() }

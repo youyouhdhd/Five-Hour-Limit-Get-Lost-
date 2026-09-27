@@ -1,0 +1,20 @@
+# Local scheduler state and temporary files
+*.tmp
+*.zip~
+run_*.txt
+ui_*.png
+
+# Workspace-only folders
+outputs/
+work/
+
+# Windows and editor noise
+Thumbs.db
+Desktop.ini
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local agent workspace data (not part of the project)
+.kilo/
