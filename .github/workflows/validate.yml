@@ -11,45 +11,77 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Parse PowerShell scripts
-        shell: pwsh
+      - name: Parse PowerShell 5.1 scripts
+        shell: powershell
         run: |
           $files = @(
-            'Five-Hour-Limit-Get-Lost-v0.1.0/CodexQueueCN.ps1',
-            'Five-Hour-Limit-Get-Lost-v0.1.0/install.ps1',
-            'Five-Hour-Limit-Get-Lost-v0.1.0/uninstall.ps1'
+            'Five-Hour-Limit-Get-Lost-v0.2.0/CodexQueueCN.ps1',
+            'Five-Hour-Limit-Get-Lost-v0.2.0/QueueCore.ps1',
+            'Five-Hour-Limit-Get-Lost-v0.2.0/install.ps1',
+            'Five-Hour-Limit-Get-Lost-v0.2.0/uninstall.ps1',
+            'tests/QueueCore.Tests.ps1',
+            'tests/Runner.Tests.ps1'
           )
           foreach ($file in $files) {
-            $errs = $null
+            $errors = $null
             $null = [System.Management.Automation.Language.Parser]::ParseFile(
-              (Resolve-Path $file), [ref]$null, [ref]$errs)
-            if ($errs -and $errs.Count) { throw "$file has parse errors" }
-            Write-Host "$($file): parse-ok"
+              (Resolve-Path $file), [ref]$null, [ref]$errors)
+            if ($errors -and $errors.Count) { throw "$file has parse errors" }
+            Write-Host "$file parse-ok"
           }
 
-      - name: Verify release zip matches source directory
-        shell: pwsh
+      - name: Run isolated scheduler and runner tests
+        shell: powershell
+        run: |
+          $powershell51 = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
+          & $powershell51 -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\tests\QueueCore.Tests.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'QueueCore tests failed.' }
+          & $powershell51 -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\tests\Runner.Tests.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Runner tests failed.' }
+
+      - name: Verify release zip matches source directory exactly
+        shell: powershell
         run: |
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $dir = 'Five-Hour-Limit-Get-Lost-v0.1.0'
-          $zip = 'Five-Hour-Limit-Get-Lost-v0.1.0.zip'
+          $dir = 'Five-Hour-Limit-Get-Lost-v0.2.0'
+          $zip = 'Five-Hour-Limit-Get-Lost-v0.2.0.zip'
           $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip))
           try {
+            $diskFiles = @([IO.Directory]::GetFiles((Resolve-Path $dir), '*', [IO.SearchOption]::AllDirectories))
+            $expected = @{}
+            foreach ($file in $diskFiles) {
+              $relative = $file.Substring((Resolve-Path $dir).Path.Length + 1).Replace('\','/')
+              $expected[$relative] = $file
+            }
+            $entries = @($archive.Entries | Where-Object { -not [string]::IsNullOrEmpty($_.Name) })
+            $actualNames = @($entries | ForEach-Object { $_.FullName })
             $mismatches = @()
-            foreach ($entry in $archive.Entries) {
-              if ([string]::IsNullOrEmpty($entry.Name)) { continue }
-              $disk = Join-Path $dir $entry.FullName
-              if (-not (Test-Path -LiteralPath $disk)) {
+            foreach ($name in $expected.Keys) {
+              if ($actualNames -notcontains $name) { $mismatches += "missing in zip: $name" }
+            }
+            foreach ($entry in $entries) {
+              if (-not $expected.ContainsKey($entry.FullName)) {
                 $mismatches += "only in zip: $($entry.FullName)"
                 continue
               }
-              $h1 = [System.Security.Cryptography.SHA256]::Create()
-              $s = $entry.Open()
-              try { $zh = [BitConverter]::ToString($h1.ComputeHash($s)).Replace('-','') }
-              finally { $s.Dispose() }
-              $dh = (Get-FileHash -LiteralPath $disk -Algorithm SHA256).Hash
-              if ($zh -ne $dh) { $mismatches += "differs: $($entry.FullName)" }
+              $sha = [Security.Cryptography.SHA256]::Create()
+              $stream = $entry.Open()
+              try { $zipHash = [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-','') }
+              finally { $stream.Dispose(); $sha.Dispose() }
+              $diskHash = (Get-FileHash -LiteralPath $expected[$entry.FullName] -Algorithm SHA256).Hash
+              if ($zipHash -ne $diskHash) { $mismatches += "hash differs: $($entry.FullName)" }
             }
             if ($mismatches.Count) { throw ($mismatches -join [Environment]::NewLine) }
-            Write-Host "release zip matches source directory"
+            Write-Host "release zip matches all $($expected.Count) source files"
           } finally { $archive.Dispose() }
+
+      - name: Verify release checksum
+        shell: powershell
+        run: |
+          $line = (Get-Content -Raw -LiteralPath 'Five-Hour-Limit-Get-Lost-v0.2.0.zip.sha256').Trim()
+          if ($line -notmatch '^(?<hash>[0-9A-Fa-f]{64})\s+\*?Five-Hour-Limit-Get-Lost-v0\.2\.0\.zip$') {
+            throw 'Invalid SHA-256 checksum file.'
+          }
+          $actual = (Get-FileHash -LiteralPath 'Five-Hour-Limit-Get-Lost-v0.2.0.zip' -Algorithm SHA256).Hash
+          if ($actual -ne $Matches.hash.ToUpperInvariant()) { throw 'Release zip checksum mismatch.' }
+          Write-Host 'release zip checksum matches'

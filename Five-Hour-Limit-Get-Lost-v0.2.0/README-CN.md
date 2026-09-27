@@ -1,6 +1,6 @@
 # Five-Hour Limit, Get Lost!（原生 Windows 轻量版）
 
-v0.2.0 下载：[GitHub Releases](https://github.com/youyouhdhd/Five-Hour-Limit-Get-Lost-/releases/tag/v0.2.0)。解压后运行 `Five-Hour-Limit-Get-Lost-v0.2.0\install.ps1` 创建桌面快捷方式，或双击同目录的 `start-five-hour-limit-get-lost.bat`。程序只调用本机 `codex.exe`，不使用远程服务，也不读取 Claude 数据。
+解压发布包后，在解压目录运行 `install.ps1` 创建桌面快捷方式，也可以双击同目录的 `start-five-hour-limit-get-lost.bat`。
 
 监管任务时有两种模式：
 
