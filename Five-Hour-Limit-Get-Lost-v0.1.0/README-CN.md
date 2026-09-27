@@ -1,6 +1,6 @@
 # Five-Hour Limit, Get Lost!（原生 Windows 轻量版）
 
-下载或克隆项目后，在项目目录运行 `install.ps1`，程序会在当前用户桌面创建 **Five-Hour Limit, Get Lost!** 快捷方式。也可以双击 `start-five-hour-limit-get-lost.bat` 直接运行。程序只调用本机 `codex.exe`，不使用远程服务，也不读取 Claude 数据。
+下载或克隆项目后，运行 Five-Hour-Limit-Get-Lost-v0.1.0\\install.ps1（或解压 zip 后进入目录运行），程序会在当前用户桌面创建 **Five-Hour Limit, Get Lost!** 快捷方式。
 
 监管任务时有两种模式：
 
